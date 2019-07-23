@@ -10,21 +10,25 @@ import Foundation
 
 
 struct PhotosResponse: Codable {
+    
     let photos: Photos
-    let stat: String
 }
 
-// MARK: - Photos
 struct Photos: Codable {
-    let page, pages, perpage: Int
-    let total: String
-    let photo: [Photo]
+    
+    let array: [Photo]
+    
+    enum CodingKeys: String, CodingKey {
+        case array = "photo"
+    }
 }
 
-// MARK: - Photo
 struct Photo: Codable {
-    let id, owner, secret, server: String
-    let farm: Int
-    let title: String
-    let ispublic, isfriend, isfamily: Int
+    
+    let id:     String
+    let secret: String
+    let server: String
+    let farm:   Int
+    let title:  String
+
 }

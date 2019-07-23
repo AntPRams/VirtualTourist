@@ -57,9 +57,9 @@ class MapViewController: UIViewController, NSFetchedResultsControllerDelegate {
         }
     }
     
-    func handlePhotos(photos: PhotosResponse?, error: Error?) {
+    func handlePhotos(response: PhotosResponse?, error: Error?) {
         if error == nil {
-            for photo in (photos?.photos.photo)! {
+            for photo in (response?.photos.array)! {
             print("https://farm\(photo.farm).staticflickr.com/\(photo.server)/\(photo.id)_\(photo.secret).jpg")
             }
         } else {
@@ -72,7 +72,7 @@ class MapViewController: UIViewController, NSFetchedResultsControllerDelegate {
         
         pin.latitude =  latitude
         pin.longitude = longitude
-        FlickrClient.getPhotosOfLocation(latitude: latitude, longitude: longitude, completionHandler: handlePhotos(photos:error:))
+        FlickrClient.getPhotosOfLocation(latitude: latitude, longitude: longitude, completionHandler: handlePhotos(response:error:))
         do {
             try dataController.viewContext.save()
             print("success on saving pin")
