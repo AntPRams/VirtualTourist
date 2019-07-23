@@ -10,7 +10,7 @@ import UIKit
 import MapKit
 import CoreData
 
-class MapViewController: UIViewController {
+class MapViewController: UIViewController, NSFetchedResultsControllerDelegate {
     
     //MARK: Properties
     
@@ -23,6 +23,9 @@ class MapViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        
+        
+        
         setupFetchedResultsController()
         
         let longPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(addAnootationThroughGesture(_:)) )
@@ -33,18 +36,34 @@ class MapViewController: UIViewController {
     @objc func addAnootationThroughGesture(_ gestureRecognizer: UIGestureRecognizer) {
         let annotation = MKPointAnnotation()
         
+        
         switch (gestureRecognizer.state){
         
         case .began:
+            
             let touchPoint = gestureRecognizer.location(in: mapView)
             let coordinates = mapView.convert(touchPoint, toCoordinateFrom: mapView)
             annotation.coordinate = coordinates
-            saveLocation(latitude: annotation.coordinate.latitude, longitude: annotation.coordinate.longitude)
+            let lat = annotation.coordinate.latitude
+            let long = annotation.coordinate.longitude
+            saveLocation(latitude: lat, longitude: long)
             mapView.addAnnotation(annotation)
+            
+            
         case .changed:
             break
         default:
             print("")
+        }
+    }
+    
+    func handlePhotos(photos: PhotosResponse?, error: Error?) {
+        if error == nil {
+            for photo in (photos?.photos.photo)! {
+            print("https://farm\(photo.farm).staticflickr.com/\(photo.server)/\(photo.id)_\(photo.secret).jpg")
+            }
+        } else {
+            print("error")
         }
     }
     
@@ -53,10 +72,10 @@ class MapViewController: UIViewController {
         
         pin.latitude =  latitude
         pin.longitude = longitude
-        
+        FlickrClient.getPhotosOfLocation(latitude: latitude, longitude: longitude, completionHandler: handlePhotos(photos:error:))
         do {
             try dataController.viewContext.save()
-            print("success")
+            print("success on saving pin")
         } catch {
             print("an error ocurred while trying to save pin")
         }
@@ -107,8 +126,3 @@ extension MapViewController: MKMapViewDelegate {
         return pinView
     }
 }
-
-extension MapViewController: NSFetchedResultsControllerDelegate {
-    
-}
-
