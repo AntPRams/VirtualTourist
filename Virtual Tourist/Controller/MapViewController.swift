@@ -10,6 +10,10 @@ import UIKit
 import MapKit
 import CoreData
 
+struct TestImage {
+    let image: UIImage
+}
+
 class MapViewController: UIViewController, NSFetchedResultsControllerDelegate {
     
     //MARK: Properties
@@ -17,14 +21,13 @@ class MapViewController: UIViewController, NSFetchedResultsControllerDelegate {
     var annotations =            [MKPointAnnotation]()
     var dataController:           DataController!
     var fetchedResultsController: NSFetchedResultsController<Pin>!
+    var images: [TestImage] = []
+    
     
     @IBOutlet weak var mapView: MKMapView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        
-        
         
         setupFetchedResultsController()
         
@@ -38,7 +41,7 @@ class MapViewController: UIViewController, NSFetchedResultsControllerDelegate {
         
         
         switch (gestureRecognizer.state){
-        
+            
         case .began:
             
             let touchPoint = gestureRecognizer.location(in: mapView)
@@ -60,7 +63,16 @@ class MapViewController: UIViewController, NSFetchedResultsControllerDelegate {
     func handlePhotos(response: PhotosResponse?, error: Error?) {
         if error == nil {
             for photo in (response?.photos.array)! {
-            print("https://farm\(photo.farm).staticflickr.com/\(photo.server)/\(photo.id)_\(photo.secret).jpg")
+                let url = URL(string: "https://farm\(photo.farm).staticflickr.com/\(photo.server)/\(photo.id)_\(photo.secret).jpg")!
+                do {
+                    let imageData = try Data(contentsOf: url)
+                    let image = UIImage(data: imageData)!
+                    let newImage = TestImage(image: image)
+                    images.append(newImage)
+                    print("success")
+                }catch{
+                    print("erro converting")
+                }
             }
         } else {
             print("error")
@@ -108,6 +120,14 @@ class MapViewController: UIViewController, NSFetchedResultsControllerDelegate {
             fatalError()
         }
     }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        guard let controller = segue.destination as? PhotosCollectionController else {return}
+        controller.dataController = dataController
+        controller.images = images
+        
+        
+    }
 }
 
 extension MapViewController: MKMapViewDelegate {
@@ -125,4 +145,10 @@ extension MapViewController: MKMapViewDelegate {
         }
         return pinView
     }
+    
+    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+        performSegue(withIdentifier: "mapToCollection", sender: self)
+        print(images.count)
+    }
 }
+
