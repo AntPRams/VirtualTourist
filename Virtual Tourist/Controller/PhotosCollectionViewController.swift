@@ -15,12 +15,12 @@ class PhotosCollectionController: UIViewController {
     var dataController: DataController!
     var fetchedResultsController: NSFetchedResultsController<Image>!
     var pin: Pin?
-    var images: [TestImage] = []
+    
     @IBOutlet weak var collectionView: UICollectionView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        print(images.count)
+        
         print("Collection VC Pin Lat: \(pin?.latitude)")
         print("Collection VC Pin Long: \(pin?.longitude)")
         
@@ -29,13 +29,12 @@ class PhotosCollectionController: UIViewController {
 
 extension PhotosCollectionController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return images.count
+        return 1
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CollectionViewCell.reusableIdentifier, for: indexPath) as! CollectionViewCell
-        let model = images[indexPath.row]
-        cell.cellImageView.image = model.image
+        
         return cell
     }
     

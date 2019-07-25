@@ -21,7 +21,6 @@ class MapViewController: UIViewController, NSFetchedResultsControllerDelegate {
     var annotations =            [MKPointAnnotation]()
     var dataController:           DataController!
     var fetchedResultsController: NSFetchedResultsController<Pin>!
-    var images: [TestImage] = []
     var pin: Pin?
     var pins: [Pin]?
     
@@ -67,10 +66,10 @@ class MapViewController: UIViewController, NSFetchedResultsControllerDelegate {
             for photo in (response?.photos.array)! {
                 let url = URL(string: "https://farm\(photo.farm).staticflickr.com/\(photo.server)/\(photo.id)_\(photo.secret).jpg")!
                 do {
-                    let imageData = try Data(contentsOf: url)
-                    let image = UIImage(data: imageData)!
-                    let newImage = TestImage(image: image)
-                    images.append(newImage)
+//                    let imageData = try Data(contentsOf: url)
+//                    let image = UIImage(data: imageData)!
+//                    let newImage = TestImage(image: image)
+                    
                     print("success")
                 }catch{
                     print("erro converting")
@@ -125,7 +124,6 @@ class MapViewController: UIViewController, NSFetchedResultsControllerDelegate {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         guard let controller = segue.destination as? PhotosCollectionController, let pin = sender as? Pin else {return}
         controller.dataController = dataController
-        controller.images = images
         controller.pin = pin
      
     }
