@@ -14,13 +14,16 @@ class PhotosCollectionController: UIViewController {
     
     var dataController: DataController!
     var fetchedResultsController: NSFetchedResultsController<Image>!
-    var pin: Pin!
+    var pin: Pin?
     var images: [TestImage] = []
     @IBOutlet weak var collectionView: UICollectionView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         print(images.count)
+        print("Collection VC Pin Lat: \(pin?.latitude)")
+        print("Collection VC Pin Long: \(pin?.longitude)")
+        
     }
 }
 

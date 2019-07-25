@@ -22,6 +22,8 @@ class MapViewController: UIViewController, NSFetchedResultsControllerDelegate {
     var dataController:           DataController!
     var fetchedResultsController: NSFetchedResultsController<Pin>!
     var images: [TestImage] = []
+    var pin: Pin?
+    var pins: [Pin]?
     
     
     @IBOutlet weak var mapView: MKMapView!
@@ -80,8 +82,8 @@ class MapViewController: UIViewController, NSFetchedResultsControllerDelegate {
     }
     
     func saveLocation(latitude: Double, longitude: Double) {
-        let pin = Pin(context: dataController.viewContext)
         
+        let pin = Pin(context: dataController.viewContext)
         pin.latitude =  latitude
         pin.longitude = longitude
         FlickrClient.getPhotosOfLocation(latitude: latitude, longitude: longitude, completionHandler: handlePhotos(response:error:))
@@ -96,21 +98,12 @@ class MapViewController: UIViewController, NSFetchedResultsControllerDelegate {
     fileprivate func setupFetchedResultsController() {
         
         let fetchRequest: NSFetchRequest<Pin> = Pin.fetchRequest()
-        fetchRequest.sortDescriptors = []
-        
-        fetchedResultsController = NSFetchedResultsController(
-            fetchRequest:         fetchRequest,
-            managedObjectContext: dataController.viewContext,
-            sectionNameKeyPath:   nil,
-            cacheName:            nil
-        )
-        
-        fetchedResultsController.delegate = self
         
         do {
-            try fetchedResultsController.performFetch()
-            guard let pins = fetchedResultsController.fetchedObjects else {return}
-            for pin in pins {
+            let fetchedPins = try dataController.viewContext.fetch(fetchRequest)
+            pins = fetchedPins
+            
+            for pin in fetchedPins {
                 let annotation = MKPointAnnotation()
                 annotation.coordinate.latitude = pin.latitude
                 annotation.coordinate.longitude = pin.longitude
@@ -121,12 +114,20 @@ class MapViewController: UIViewController, NSFetchedResultsControllerDelegate {
         }
     }
     
+    
+    private func preparePinForSegue(latitude: Double, longitude: Double) -> Pin? {
+        
+        return nil
+    }
+    
+   
+    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        guard let controller = segue.destination as? PhotosCollectionController else {return}
+        guard let controller = segue.destination as? PhotosCollectionController, let pin = sender as? Pin else {return}
         controller.dataController = dataController
         controller.images = images
-        
-        
+        controller.pin = pin
+     
     }
 }
 
@@ -147,8 +148,20 @@ extension MapViewController: MKMapViewDelegate {
     }
     
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-        performSegue(withIdentifier: "mapToCollection", sender: self)
-        print(images.count)
+        
+        guard let latitude =  view.annotation?.coordinate.latitude,
+              let longitude = view.annotation?.coordinate.longitude
+              else {return}
+        
+        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Pin")
+        fetchRequest.predicate = NSPredicate(format:"longitude == %@ AND latitude == %@", String(longitude), String(latitude))
+        
+        do {
+            self.pin = try dataController.viewContext.fetch(fetchRequest).first as? Pin
+        } catch {
+            print("error")
+        }
+        performSegue(withIdentifier: "mapToCollection", sender: pin)
     }
 }
 
