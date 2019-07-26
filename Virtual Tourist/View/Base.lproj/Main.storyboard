@@ -44,10 +44,10 @@
             </objects>
             <point key="canvasLocation" x="1957.9710144927537" y="118.52678571428571"/>
         </scene>
-        <!--Photos Collection Controller-->
+        <!--Images Collection View Controller-->
         <scene sceneID="0SR-LR-ZMB">
             <objects>
-                <viewController id="g54-Ib-s7L" customClass="PhotosCollectionController" customModule="Virtual_Tourist" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="g54-Ib-s7L" customClass="ImagesCollectionViewController" customModule="Virtual_Tourist" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="ISk-Dh-fRy">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -72,6 +72,10 @@
                                                 <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="maN-Nh-AXk">
                                                     <rect key="frame" x="0.0" y="0.0" width="136" height="136"/>
                                                 </imageView>
+                                                <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="vWf-M1-hwY">
+                                                    <rect key="frame" x="58" y="58" width="20" height="20"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                </activityIndicatorView>
                                             </subviews>
                                         </view>
                                         <constraints>
@@ -81,6 +85,7 @@
                                             <constraint firstItem="maN-Nh-AXk" firstAttribute="leading" secondItem="csk-IS-amO" secondAttribute="leading" id="iQx-D6-ejd"/>
                                         </constraints>
                                         <connections>
+                                            <outlet property="activityIndicator" destination="vWf-M1-hwY" id="lxz-GM-cUh"/>
                                             <outlet property="cellImageView" destination="maN-Nh-AXk" id="ROT-CW-46s"/>
                                         </connections>
                                     </collectionViewCell>

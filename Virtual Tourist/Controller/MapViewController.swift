@@ -10,82 +10,67 @@ import UIKit
 import MapKit
 import CoreData
 
-struct TestImage {
-    let image: UIImage
-}
 
 class MapViewController: UIViewController, NSFetchedResultsControllerDelegate {
     
     //MARK: Properties
     
-    var annotations =            [MKPointAnnotation]()
-    var dataController:           DataController!
     var fetchedResultsController: NSFetchedResultsController<Pin>!
-    var pin: Pin?
-    var pins: [Pin]?
+    var dataController:           DataController!
+    var pin:                      Pin?
     
+    //Outlets
     
     @IBOutlet weak var mapView: MKMapView!
+    
+    //MARK: View life cycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        setupFetchedResultsController()
+        fetchPinsAndPopulateMapWithAnnotations()
+        addGestureRecognizer()
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
         
+        fetchedResultsController = nil
+    }
+    
+    fileprivate func addGestureRecognizer() {
         let longPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(addAnootationThroughGesture(_:)) )
         longPressGestureRecognizer.minimumPressDuration = 1
         mapView.addGestureRecognizer(longPressGestureRecognizer)
     }
     
     @objc func addAnootationThroughGesture(_ gestureRecognizer: UIGestureRecognizer) {
+        
         let annotation = MKPointAnnotation()
         
-        
         switch (gestureRecognizer.state){
-            
         case .began:
-            
             let touchPoint = gestureRecognizer.location(in: mapView)
-            let coordinates = mapView.convert(touchPoint, toCoordinateFrom: mapView)
+            let coordinates = mapView.convert(touchPoint,
+                                              toCoordinateFrom: mapView
+            )
             annotation.coordinate = coordinates
-            let lat = annotation.coordinate.latitude
-            let long = annotation.coordinate.longitude
-            saveLocation(latitude: lat, longitude: long)
+            saveLocation(latitude: annotation.coordinate.latitude,
+                         longitude: annotation.coordinate.longitude
+            )
             mapView.addAnnotation(annotation)
-            
-            
         case .changed:
             break
         default:
             print("")
         }
     }
-    
-    func handlePhotos(response: PhotosResponse?, error: Error?) {
-        if error == nil {
-            for photo in (response?.photos.array)! {
-                let url = URL(string: "https://farm\(photo.farm).staticflickr.com/\(photo.server)/\(photo.id)_\(photo.secret).jpg")!
-                do {
-//                    let imageData = try Data(contentsOf: url)
-//                    let image = UIImage(data: imageData)!
-//                    let newImage = TestImage(image: image)
-                    
-                    print("success")
-                }catch{
-                    print("erro converting")
-                }
-            }
-        } else {
-            print("error")
-        }
-    }
-    
+   
     func saveLocation(latitude: Double, longitude: Double) {
         
         let pin = Pin(context: dataController.viewContext)
         pin.latitude =  latitude
         pin.longitude = longitude
-        FlickrClient.getPhotosOfLocation(latitude: latitude, longitude: longitude, completionHandler: handlePhotos(response:error:))
         do {
             try dataController.viewContext.save()
             print("success on saving pin")
@@ -94,17 +79,18 @@ class MapViewController: UIViewController, NSFetchedResultsControllerDelegate {
         }
     }
     
-    fileprivate func setupFetchedResultsController() {
+    fileprivate func fetchPinsAndPopulateMapWithAnnotations() {
         
         let fetchRequest: NSFetchRequest<Pin> = Pin.fetchRequest()
+        fetchRequest.sortDescriptors = []
+        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
         
         do {
-            let fetchedPins = try dataController.viewContext.fetch(fetchRequest)
-            pins = fetchedPins
-            
+            try fetchedResultsController.performFetch()
+            guard let fetchedPins = fetchedResultsController.fetchedObjects else {return}
             for pin in fetchedPins {
                 let annotation = MKPointAnnotation()
-                annotation.coordinate.latitude = pin.latitude
+                annotation.coordinate.latitude =  pin.latitude
                 annotation.coordinate.longitude = pin.longitude
                 mapView.addAnnotation(annotation)
             }
@@ -113,19 +99,14 @@ class MapViewController: UIViewController, NSFetchedResultsControllerDelegate {
         }
     }
     
-    
-    private func preparePinForSegue(latitude: Double, longitude: Double) -> Pin? {
-        
-        return nil
-    }
-    
-   
-    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        guard let controller = segue.destination as? PhotosCollectionController, let pin = sender as? Pin else {return}
+        
+        guard let controller = segue.destination as? ImagesCollectionViewController,
+              let pin = sender as? Pin
+              else {return}
+        
         controller.dataController = dataController
         controller.pin = pin
-     
     }
 }
 
@@ -151,11 +132,11 @@ extension MapViewController: MKMapViewDelegate {
               let longitude = view.annotation?.coordinate.longitude
               else {return}
         
-        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Pin")
+        let fetchRequest: NSFetchRequest<Pin> = Pin.fetchRequest()
         fetchRequest.predicate = NSPredicate(format:"longitude == %@ AND latitude == %@", String(longitude), String(latitude))
-        
+        print("map vc lat is: \(latitude)")
         do {
-            self.pin = try dataController.viewContext.fetch(fetchRequest).first as? Pin
+            pin = try dataController.viewContext.fetch(fetchRequest).first
         } catch {
             print("error")
         }

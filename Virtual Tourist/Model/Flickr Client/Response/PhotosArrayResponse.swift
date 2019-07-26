@@ -10,19 +10,25 @@ import Foundation
 
 struct PhotosResponse: Codable {
     
-    let photos: Photos
-}
-
-struct Photos: Codable {
-    
-    let array: [Photo]
+    let rawImages: RawImages
     
     enum CodingKeys: String, CodingKey {
-        case array = "photo"
+        case rawImages = "photos"
     }
 }
 
-struct Photo: Codable {
+struct RawImages: Codable {
+    
+    let array: [RawImage]
+    let pages: Int
+    
+    enum CodingKeys: String, CodingKey {
+        case array = "photo"
+        case pages
+    }
+}
+
+struct RawImage: Codable {
     
     let id:     String
     let secret: String

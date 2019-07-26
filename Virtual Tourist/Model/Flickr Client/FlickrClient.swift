@@ -38,16 +38,27 @@ class FlickrClient {
         task.resume()
     }
     
-    class func getPhotosOfLocation(latitude: Double, longitude: Double, completionHandler: @escaping (PhotosResponse?, Error?) -> Void) {
-        taskForGETRequest(url: EndPoints.getPhotosForLocation(String(latitude), String(longitude)).url, response: PhotosResponse.self) { (response, error) in
+    class func getPhotosOfLocation(latitude: Double, longitude: Double, pages: Int? = nil, completionHandler: @escaping (PhotosResponse?, Error?) -> Void) {
+        
+        var page: Int {
+            guard let pages = pages else {return 1}
+            return Int.random(in: 1...pages)
+        }
+        
+        taskForGETRequest(url: EndPoints.getImagesForLocation(String(latitude),
+                                                              String(longitude),
+                                                              String(page)).url,
+                                                              response: PhotosResponse.self
+            ){
+            (response, error) in
+                
             if let response = response {
-                //print("response: \(response.photos)")
+                
                 DispatchQueue.main.async {
                     completionHandler(response, nil)
                 }
             }  else {
                 DispatchQueue.main.async {
-                    
                     print("Error in get photos ofr loc: \(error?.localizedDescription)")
                     completionHandler(nil, error)
                 }

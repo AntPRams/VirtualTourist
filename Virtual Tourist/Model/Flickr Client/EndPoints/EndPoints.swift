@@ -10,40 +10,50 @@ import Foundation
 
 enum EndPoints {
     
+    //Construct URL to comunicate with Flickr API search Method
+    
     static let base =           "https://www.flickr.com/services/rest/"
-    static let method =         "?method=flickr.photos.search"
+    static let searchMethod =   "?method=flickr.photos.search"
     static let apiKey =         "&api_key=eccb4ab3d58a3ccf0452fa2fd2422b8a"
     static let accuracy =       "&accuracy=9"
     static let contentType =    "&content_type=1"
     static let latitude =       "&lat="
     static let longitude =      "&lon="
-    static let resultsPerPage = "&per_page=10"
-    static let pageNumber =     "&page=\(Int.random(in: 1...100))"
+    static let resultsPerPage = "&per_page=1"
+    static let pageNumber =     "&page="
     static let format =         "&format=json"
     static let callBack =       "&nojsoncallback=1"
     
-    case getPhotosForLocation(String, String)
+    case getImagesForLocation(String, String, String)
+    case downloadImagesUrl(String, String, String, String)
     
     var stringValue: String {
         
         switch self {
-        case .getPhotosForLocation(let latitude, let longitude):
+        case .getImagesForLocation(let latitude, let longitude, let pageNumber):
             return
                 EndPoints.base +
-                EndPoints.method +
+                EndPoints.searchMethod +
                 EndPoints.apiKey +
                 EndPoints.accuracy +
                 EndPoints.contentType +
                 EndPoints.latitude + latitude +
                 EndPoints.longitude + longitude +
                 EndPoints.resultsPerPage +
-                EndPoints.pageNumber +
+                EndPoints.pageNumber + pageNumber +
                 EndPoints.format +
                 EndPoints.callBack
+            
+        case .downloadImagesUrl(let farmId, let photoServer, let photoId, let photoSecret):
+            return "https://farm\(farmId).staticflickr.com/\(photoServer)/\(photoId)_\(photoSecret).jpg"
         }
     }
     
     var url: URL {
         return URL(string: stringValue)!
+    }
+    
+    var string: String {
+        return stringValue
     }
 }
