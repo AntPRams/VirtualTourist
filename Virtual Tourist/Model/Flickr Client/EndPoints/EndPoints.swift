@@ -19,7 +19,7 @@ enum EndPoints {
     static let contentType =    "&content_type=1"
     static let latitude =       "&lat="
     static let longitude =      "&lon="
-    static let resultsPerPage = "&per_page=1"
+    static let resultsPerPage = "&per_page=15"
     static let pageNumber =     "&page="
     static let format =         "&format=json"
     static let callBack =       "&nojsoncallback=1"

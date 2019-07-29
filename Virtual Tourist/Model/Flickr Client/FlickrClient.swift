@@ -65,5 +65,43 @@ class FlickrClient {
             }
         }
     }
+    
+    class func downloadImageData(image: Image, completionHandler: @escaping(UIImage?, Error?) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            if image.data == nil {
+                guard let imageUrl = image.url, let url = URL(string: imageUrl) else {return}
+                do {
+                    let imageData = try Data(contentsOf: url)
+                    DispatchQueue.main.async {
+                        image.data = imageData
+                        let image = UIImage(data: imageData)
+                        //completionHandler(image, nil)
+                        print("@@@@ - image DOWNLOADED and passed to handler")
+                    }
+                } catch {
+                    DispatchQueue.main.async {
+                        completionHandler(nil, error)
+                    }
+                }
+            } else {
+                DispatchQueue.main.async {
+                    guard let imageData = image.data else {return}
+                    let image = UIImage(data: imageData)
+                    print("**** - image LOADED from memory and passed to handler")
+                    completionHandler(image, nil)
+                }
+            }
+        }
+    }
+    
+//    func saveContextOfImage(image: Image, data: Data) {
+//        do {
+//            image.data = data
+//            try dataController.viewContext.save()
+//            print("saved!")
+//        } catch {
+//            print(error.localizedDescription)
+//        }
+//    }
 }
 

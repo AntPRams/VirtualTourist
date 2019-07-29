@@ -16,10 +16,11 @@ class ImagesCollectionViewController: UIViewController {
     var fetchedResultsController: NSFetchedResultsController<Image>!
     var pin: Pin!
     var totalPages: Int?
-    var insertIndexPaths: [IndexPath]!
-    var deleteIndexPaths: [IndexPath]!
-    var updateIndexPaths: [IndexPath]!
     
+    var selectedIndexes = [IndexPath]()
+    var insertedIndexPaths: [IndexPath]!
+    var deletedIndexPaths: [IndexPath]!
+    var updatedIndexPaths: [IndexPath]!
     
     @IBOutlet weak var collectionView: UICollectionView!
     
@@ -33,8 +34,6 @@ class ImagesCollectionViewController: UIViewController {
         }
         
     }
-    
-    
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
@@ -56,32 +55,32 @@ class ImagesCollectionViewController: UIViewController {
             try fetchedResultsController.performFetch()
             print("SECTIONS COUNT: \(fetchedResultsController.sections!.count)")
         } catch {
-            print("erro getting images fetched results controller")
+            print("error getting images fetched results controller")
         }
     }
     
     private func getImagesFromFlickrForSelectedPin (latitude: Double?, longitude: Double?) {
         guard let latitude = latitude, let longitude = longitude else {return}
-    
+        
         FlickrClient.getPhotosOfLocation(latitude: latitude, longitude: longitude, pages: totalPages, completionHandler: handlePhotos(response:error:))
     }
     
-    func handlePhotos(response: PhotosResponse?, error: Error?) {
-    
+    private func handlePhotos(response: PhotosResponse?, error: Error?) {
+        
         if error == nil {
             
             totalPages = response?.rawImages.pages
             guard let response = response?.rawImages.array else {return}
             var photosToStore: [Image] = []
-                for rawImage in response {
-                    let image = Image(context: dataController.viewContext)
-                    let url = EndPoints.downloadImagesUrl(String(rawImage.farm),
-                                                          rawImage.server,
-                                                          rawImage.id,
-                                                          rawImage.secret).string
-                    image.url = url
-                    image.pin = pin
-                    photosToStore.append(image)
+            for rawImage in response {
+                let image = Image(context: dataController.viewContext)
+                let url = EndPoints.downloadImagesUrl(String(rawImage.farm),
+                                                      rawImage.server,
+                                                      rawImage.id,
+                                                      rawImage.secret).string
+                image.url = url
+                image.pin = pin
+                photosToStore.append(image)
             }
             
             do {
@@ -95,8 +94,15 @@ class ImagesCollectionViewController: UIViewController {
         }
     }
     
-    func downloadDataInBackground(images: [Image]) {
-        
+    private func saveContextIfNeeded() {
+        if dataController.viewContext.hasChanges {
+            do {
+                try dataController.viewContext.save()
+                print("SAVED")
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
     }
 }
 
@@ -116,104 +122,82 @@ extension ImagesCollectionViewController: UICollectionViewDataSource, UICollecti
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CollectionViewCell.reusableIdentifier, for: indexPath) as! CollectionViewCell
-        cell.cellImageView = nil
+    
+        cell.cellImageView.image = nil
         cell.activityIndicator.startAnimating()
-
+        
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        
         let image = fetchedResultsController.object(at: indexPath)
-        guard let url = image.url else {return}
         let cell = cell as! CollectionViewCell
         
-        let downloadQueue = DispatchQueue(label: "download", qos: .background)
-        
-        downloadQueue.async {
-            if let url = URL(string: url), let imageData = try? Data(contentsOf: url) {
-                image.data = imageData
-                print(imageData)
-                
-                DispatchQueue.main.async {
-                    let newImage = UIImage(data: image.data!)
-                    print(image.data)
-                    print(newImage)
-                    cell.cellImageView.image = newImage
-                    cell.activityIndicator.stopAnimating()
-               }
+        FlickrClient.downloadImageData(image: image) { (image, error) in
+            if let image = image {
+                cell.activityIndicator.stopAnimating()
+                cell.cellImageView.image = image
+                self.saveContextIfNeeded()
+                print("image loaded")
+            } else {
+                print(error?.localizedDescription)
             }
         }
     }
+}
     
-    func getImageData(handler: @escaping(Data?, Error?)) {
-        
-    }
     
-    func collectionView(_ collectionView: UICollectionView, didEndDisplaying: UICollectionViewCell, forItemAt: IndexPath) {
+    
+    extension ImagesCollectionViewController: NSFetchedResultsControllerDelegate {
         
-        if collectionView.cellForItem(at: forItemAt) == nil {
-            return
+        func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+            insertedIndexPaths = [IndexPath]()
+            deletedIndexPaths = [IndexPath]()
+            updatedIndexPaths = [IndexPath]()
         }
         
-        let image = fetchedResultsController.object(at: forItemAt)
-        if let imageUrl = image.url {
-        var tasks: [String: URLSessionDataTask] = [:]
-        tasks[imageUrl]?.cancel()
+        func controller(
+            _ controller: NSFetchedResultsController<NSFetchRequestResult>,
+            didChange anObject: Any,
+            at indexPath: IndexPath?,
+            for type: NSFetchedResultsChangeType,
+            newIndexPath: IndexPath?) {
+            
+            switch (type) {
+            case .insert:
+                insertedIndexPaths.append(newIndexPath!)
+                break
+            case .delete:
+                deletedIndexPaths.append(indexPath!)
+                break
+            case .update:
+                updatedIndexPaths.append(indexPath!)
+                break
+            case .move:
+                print("Move an item. We don't expect to see this in this app.")
+                break
+            }
         }
         
-    }
-   
+        func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+            
+            collectionView.performBatchUpdates({() -> Void in
+                
+                for indexPath in self.insertedIndexPaths {
+                    self.collectionView.insertItems(at: [indexPath])
+                }
+                
+                for indexPath in self.deletedIndexPaths {
+                    self.collectionView.deleteItems(at: [indexPath])
+                }
+                
+                for indexPath in self.updatedIndexPaths {
+                    self.collectionView.reloadItems(at: [indexPath])
+                }
+                
+            }, completion: nil)
+        }
         
-    
-    
-    
 }
 
-extension ImagesCollectionViewController: NSFetchedResultsControllerDelegate {
-    
-    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        
-        insertIndexPaths = [IndexPath]()
-        deleteIndexPaths = [IndexPath]()
-        updateIndexPaths = [IndexPath]()
-    
-    }
-    
-    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
-        
-        switch type {
-        case .insert:
-            insertIndexPaths.append(newIndexPath!)
-        case .update:
-            updateIndexPaths.append(indexPath!)
-        case .delete:
-            deleteIndexPaths.append(indexPath!)
-        default:
-            print("ITS A BREAK")
-            break
-            
-        }
-    }
-    
-    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        collectionView.performBatchUpdates({
-            
-            for indexPath in self.insertIndexPaths {
-                self.collectionView.insertItems(at: [indexPath])
-            }
-            
-            for indexPath in self.updateIndexPaths {
-                self.collectionView.reloadItems(at: [indexPath])
-            }
-            
-            for indexPath in self.deleteIndexPaths {
-                self.collectionView.deleteItems(at: [indexPath])
-            }
-            
-            
-        }, completion: nil)
-        }
-    
-    
-    
-}
