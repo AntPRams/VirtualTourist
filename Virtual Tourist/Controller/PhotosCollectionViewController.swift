@@ -10,17 +10,17 @@ import UIKit
 import MapKit
 import CoreData
 
-class ImagesCollectionViewController: UIViewController {
+class ImagesCollectionViewController: MainViewController {
     
     var dataController: DataController!
     var fetchedResultsController: NSFetchedResultsController<Image>!
+    
     var pin: Pin!
     var totalPages: Int?
     
-    var selectedIndexes = [IndexPath]()
-    var insertedIndexPaths: [IndexPath]!
-    var deletedIndexPaths: [IndexPath]!
-    var updatedIndexPaths: [IndexPath]!
+    var insertIndexPath: [IndexPath]!
+    var deleteIndexPath: [IndexPath]!
+    var updateIndexPath: [IndexPath]!
     
     @IBOutlet weak var collectionView: UICollectionView!
     
@@ -32,7 +32,6 @@ class ImagesCollectionViewController: UIViewController {
         if pin?.images?.count == 0 {
             getImagesFromFlickrForSelectedPin(latitude: pin?.latitude, longitude: pin?.longitude)
         }
-        
     }
     
     override func viewDidDisappear(_ animated: Bool) {
@@ -41,37 +40,63 @@ class ImagesCollectionViewController: UIViewController {
         fetchedResultsController = nil
     }
     
+    private func checkImagesForSelected(_ pin: Pin) {
+        
+        guard let imagesSetForSelectedPin = pin.images else {return}
+        
+        if imagesSetForSelectedPin.count == 0 {
+            getImagesFromFlickrForSelectedPin(latitude:  pin.latitude,
+                                              longitude: pin.longitude
+            )
+        }
+    }
+    
     private func fetchImagesForSelectedPin(_ pin: Pin) {
+        
         let fetchRequest: NSFetchRequest<Image> = Image.fetchRequest()
-        let predicate = NSPredicate(format: "pin == %@", argumentArray: [pin])
+        let predicate = NSPredicate(format: "pin == %@",
+                                    argumentArray: [pin]
+        )
         fetchRequest.predicate = predicate
         
         fetchRequest.sortDescriptors = []
         
-        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
+                                                              managedObjectContext: dataController.viewContext,
+                                                              sectionNameKeyPath: nil,
+                                                              cacheName: nil
+        )
+        
         fetchedResultsController.delegate = self
         
         do {
             try fetchedResultsController.performFetch()
-            print("SECTIONS COUNT: \(fetchedResultsController.sections!.count)")
         } catch {
             print("error getting images fetched results controller")
         }
     }
     
     private func getImagesFromFlickrForSelectedPin (latitude: Double?, longitude: Double?) {
-        guard let latitude = latitude, let longitude = longitude else {return}
         
-        FlickrClient.getPhotosOfLocation(latitude: latitude, longitude: longitude, pages: totalPages, completionHandler: handlePhotos(response:error:))
+        guard let latitude = latitude,
+            let longitude = longitude
+            else {return}
+        
+        FlickrClient.getImagesOfLocation(latitude:          latitude,
+                                         longitude:         longitude,
+                                         pages:             totalPages,
+                                         completionHandler: handleImagesResponse(response:error:)
+        )
     }
     
-    private func handlePhotos(response: PhotosResponse?, error: Error?) {
+    private func handleImagesResponse(response: PhotosResponse?, error: Error?) {
         
         if error == nil {
             
             totalPages = response?.rawImages.pages
             guard let response = response?.rawImages.array else {return}
-            var photosToStore: [Image] = []
+            var imagesToSave: [Image] = []
+            
             for rawImage in response {
                 let image = Image(context: dataController.viewContext)
                 let url = EndPoints.downloadImagesUrl(String(rawImage.farm),
@@ -80,28 +105,18 @@ class ImagesCollectionViewController: UIViewController {
                                                       rawImage.secret).string
                 image.url = url
                 image.pin = pin
-                photosToStore.append(image)
+                imagesToSave.append(image)
             }
             
-            do {
-                pin.images?.addingObjects(from: photosToStore)
-                try dataController.viewContext.save()
-            } catch {
-                print("error")
+            pin.images?.addingObjects(from: imagesToSave)
+            save(dataController.viewContext)
+            
+            if response.count == 0 {
+                print("NO IMAGES")
             }
+            
         } else {
             print("error")
-        }
-    }
-    
-    private func saveContextIfNeeded() {
-        if dataController.viewContext.hasChanges {
-            do {
-                try dataController.viewContext.save()
-                print("SAVED")
-            } catch {
-                print(error.localizedDescription)
-            }
         }
     }
 }
@@ -138,66 +153,59 @@ extension ImagesCollectionViewController: UICollectionViewDataSource, UICollecti
             if let image = image {
                 cell.activityIndicator.stopAnimating()
                 cell.cellImageView.image = image
-                self.saveContextIfNeeded()
-                print("image loaded")
+                self.save(self.dataController.viewContext)
             } else {
                 print(error?.localizedDescription)
             }
         }
     }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        print("YOU PICK")
+    }
 }
-    
-    
-    
+
     extension ImagesCollectionViewController: NSFetchedResultsControllerDelegate {
         
         func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-            insertedIndexPaths = [IndexPath]()
-            deletedIndexPaths = [IndexPath]()
-            updatedIndexPaths = [IndexPath]()
+            insertIndexPath = [IndexPath]()
+            deleteIndexPath = [IndexPath]()
+            updateIndexPath = [IndexPath]()
         }
         
-        func controller(
-            _ controller: NSFetchedResultsController<NSFetchRequestResult>,
-            didChange anObject: Any,
-            at indexPath: IndexPath?,
-            for type: NSFetchedResultsChangeType,
-            newIndexPath: IndexPath?) {
+        func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
             
             switch (type) {
             case .insert:
-                insertedIndexPaths.append(newIndexPath!)
-                break
-            case .delete:
-                deletedIndexPaths.append(indexPath!)
+                insertIndexPath.append(newIndexPath!)
                 break
             case .update:
-                updatedIndexPaths.append(indexPath!)
+                updateIndexPath.append(indexPath!)
+                break
+            case .delete:
+                deleteIndexPath.append(indexPath!)
                 break
             case .move:
-                print("Move an item. We don't expect to see this in this app.")
+                print("This feature is not implemented in this app.")
                 break
+            @unknown default:
+                print("Unknow feature not yet implemented")
             }
         }
         
         func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
             
-            collectionView.performBatchUpdates({() -> Void in
-                
-                for indexPath in self.insertedIndexPaths {
+            collectionView.performBatchUpdates( {() -> Void in
+                for indexPath in self.insertIndexPath {
                     self.collectionView.insertItems(at: [indexPath])
                 }
-                
-                for indexPath in self.deletedIndexPaths {
+                for indexPath in self.deleteIndexPath {
                     self.collectionView.deleteItems(at: [indexPath])
                 }
-                
-                for indexPath in self.updatedIndexPaths {
+                for indexPath in self.updateIndexPath {
                     self.collectionView.reloadItems(at: [indexPath])
                 }
-                
             }, completion: nil)
         }
-        
 }
 

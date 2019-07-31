@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		916CE1C822F1DD4800320F96 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 916CE1C722F1DD4800320F96 /* MainViewController.swift */; };
 		91EB31BE22E51BAD00C37DD7 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91EB31BD22E51BAD00C37DD7 /* AppDelegate.swift */; };
 		91EB31C022E51BAD00C37DD7 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91EB31BF22E51BAD00C37DD7 /* MapViewController.swift */; };
 		91EB31C322E51BAD00C37DD7 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 91EB31C122E51BAD00C37DD7 /* Main.storyboard */; };
@@ -22,6 +23,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		916CE1C722F1DD4800320F96 /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		91EB31BA22E51BAD00C37DD7 /* Virtual Tourist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Virtual Tourist.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		91EB31BD22E51BAD00C37DD7 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		91EB31BF22E51BAD00C37DD7 /* MapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewController.swift; sourceTree = "<group>"; };
@@ -102,6 +104,7 @@
 				91EB31BF22E51BAD00C37DD7 /* MapViewController.swift */,
 				91FF208322E7D9890049D6F2 /* PhotosCollectionViewController.swift */,
 				91FF208122E7D2B10049D6F2 /* CollectionViewCell.swift */,
+				916CE1C722F1DD4800320F96 /* MainViewController.swift */,
 			);
 			path = Controller;
 			sourceTree = "<group>";
@@ -221,6 +224,7 @@
 				91EB31BE22E51BAD00C37DD7 /* AppDelegate.swift in Sources */,
 				91EB31D422E51C9500C37DD7 /* FlickrClient.swift in Sources */,
 				91EB31E122E69C4C00C37DD7 /* PhotosArrayResponse.swift in Sources */,
+				916CE1C822F1DD4800320F96 /* MainViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

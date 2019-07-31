@@ -11,7 +11,7 @@ import MapKit
 import CoreData
 
 
-class MapViewController: UIViewController, NSFetchedResultsControllerDelegate {
+class MapViewController: MainViewController, NSFetchedResultsControllerDelegate {
     
     //MARK: Properties
     
@@ -28,6 +28,7 @@ class MapViewController: UIViewController, NSFetchedResultsControllerDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        navigationItem.rightBarButtonItem = editButtonItem
         fetchPinsAndPopulateMapWithAnnotations()
         addGestureRecognizer()
     }
@@ -71,12 +72,7 @@ class MapViewController: UIViewController, NSFetchedResultsControllerDelegate {
         let pin = Pin(context: dataController.viewContext)
         pin.latitude =  latitude
         pin.longitude = longitude
-        do {
-            try dataController.viewContext.save()
-            print("success on saving pin")
-        } catch {
-            print("an error ocurred while trying to save pin")
-        }
+        save(dataController.viewContext)
     }
     
     fileprivate func fetchPinsAndPopulateMapWithAnnotations() {
@@ -126,19 +122,40 @@ extension MapViewController: MKMapViewDelegate {
         return pinView
     }
     
-    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-        
-        guard let latitude =  view.annotation?.coordinate.latitude,
-              let longitude = view.annotation?.coordinate.longitude
-              else {return}
+    fileprivate func loadPinFromDataBase(_ longitude: CLLocationDegrees, _ latitude: CLLocationDegrees) -> Pin? {
         
         let fetchRequest: NSFetchRequest<Pin> = Pin.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format:"longitude == %@ AND latitude == %@", String(longitude), String(latitude))
-        print("map vc lat is: \(latitude)")
+        fetchRequest.predicate = NSPredicate(
+            format:"longitude == %@ AND latitude == %@",
+            String(longitude),
+            String(latitude)
+        )
         do {
             pin = try dataController.viewContext.fetch(fetchRequest).first
+            guard pin != nil else {return nil}
         } catch {
             print("error")
+        }
+        
+        return pin
+    }
+    
+    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+        
+        guard let annotation = view.annotation,
+              let pin = loadPinFromDataBase(
+                  annotation.coordinate.longitude,
+                  annotation.coordinate.latitude
+              )
+              else {return}
+    
+        mapView.deselectAnnotation(annotation, animated: true)
+        
+        if isEditing {
+            mapView.removeAnnotation(annotation)
+            delete(dataController.viewContext, object: pin)
+            save(dataController.viewContext)
+            return
         }
         performSegue(withIdentifier: "mapToCollection", sender: pin)
     }

@@ -38,7 +38,7 @@ class FlickrClient {
         task.resume()
     }
     
-    class func getPhotosOfLocation(latitude: Double, longitude: Double, pages: Int? = nil, completionHandler: @escaping (PhotosResponse?, Error?) -> Void) {
+    class func getImagesOfLocation(latitude: Double, longitude: Double, pages: Int? = nil, completionHandler: @escaping (PhotosResponse?, Error?) -> Void) {
         
         var page: Int {
             guard let pages = pages else {return 1}
@@ -59,7 +59,6 @@ class FlickrClient {
                 }
             }  else {
                 DispatchQueue.main.async {
-                    print("Error in get photos ofr loc: \(error?.localizedDescription)")
                     completionHandler(nil, error)
                 }
             }
@@ -74,9 +73,6 @@ class FlickrClient {
                     let imageData = try Data(contentsOf: url)
                     DispatchQueue.main.async {
                         image.data = imageData
-                        let image = UIImage(data: imageData)
-                        //completionHandler(image, nil)
-                        print("@@@@ - image DOWNLOADED and passed to handler")
                     }
                 } catch {
                     DispatchQueue.main.async {
@@ -87,21 +83,10 @@ class FlickrClient {
                 DispatchQueue.main.async {
                     guard let imageData = image.data else {return}
                     let image = UIImage(data: imageData)
-                    print("**** - image LOADED from memory and passed to handler")
                     completionHandler(image, nil)
                 }
             }
         }
     }
-    
-//    func saveContextOfImage(image: Image, data: Data) {
-//        do {
-//            image.data = data
-//            try dataController.viewContext.save()
-//            print("saved!")
-//        } catch {
-//            print(error.localizedDescription)
-//        }
-//    }
 }
 
