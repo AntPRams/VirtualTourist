@@ -27,17 +27,28 @@ class ImagesCollectionViewController: MainViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        fetchImagesForSelectedPin(pin)
-        
-        if pin?.images?.count == 0 {
-            getImagesFromFlickrForSelectedPin(latitude: pin?.latitude, longitude: pin?.longitude)
-        }
+        fetchOrDownloadImagesForSelected(pin)
     }
+    
+//    override func viewWillAppear(_ animated: Bool) {
+//        super.viewWillAppear(animated)
+//
+//        fetchOrDownloadImagesForSelected(pin)
+//    }
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         
         fetchedResultsController = nil
+    }
+    
+    fileprivate func fetchOrDownloadImagesForSelected(_ pin: Pin) {
+        
+        fetchImagesForSelected(pin)
+        
+        if pin.images?.count == 0 {
+            getImagesFromFlickrForSelectedPin(latitude: pin.latitude, longitude: pin.longitude)
+        }
     }
     
     private func checkImagesForSelected(_ pin: Pin) {
@@ -51,7 +62,7 @@ class ImagesCollectionViewController: MainViewController {
         }
     }
     
-    private func fetchImagesForSelectedPin(_ pin: Pin) {
+    fileprivate func fetchImagesForSelected(_ pin: Pin) {
         
         let fetchRequest: NSFetchRequest<Image> = Image.fetchRequest()
         let predicate = NSPredicate(format: "pin == %@",
@@ -152,6 +163,7 @@ extension ImagesCollectionViewController: UICollectionViewDataSource, UICollecti
         FlickrClient.downloadImageData(image: image) { (image, error) in
             if let image = image {
                 cell.activityIndicator.stopAnimating()
+                cell.activityIndicator.isHidden = true
                 cell.cellImageView.image = image
                 self.save(self.dataController.viewContext)
             } else {
@@ -161,7 +173,9 @@ extension ImagesCollectionViewController: UICollectionViewDataSource, UICollecti
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        print("YOU PICK")
+        
+        let imageToDelete = fetchedResultsController.object(at: indexPath)
+        delete(dataController.viewContext, object: imageToDelete)
     }
 }
 

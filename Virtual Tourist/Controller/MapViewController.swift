@@ -33,6 +33,12 @@ class MapViewController: MainViewController, NSFetchedResultsControllerDelegate 
         addGestureRecognizer()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        fetchPinsAndPopulateMapWithAnnotations()
+    }
+    
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         
@@ -143,20 +149,19 @@ extension MapViewController: MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
         
         guard let annotation = view.annotation,
-              let pin = loadPinFromDataBase(
-                  annotation.coordinate.longitude,
-                  annotation.coordinate.latitude
-              )
-              else {return}
-    
-        mapView.deselectAnnotation(annotation, animated: true)
+            let pin = loadPinFromDataBase(
+                annotation.coordinate.longitude,
+                annotation.coordinate.latitude
+            )
+            else {return}
         
         if isEditing {
             mapView.removeAnnotation(annotation)
             delete(dataController.viewContext, object: pin)
-            save(dataController.viewContext)
             return
         }
+        
+        mapView.deselectAnnotation(annotation, animated: true)
         performSegue(withIdentifier: "mapToCollection", sender: pin)
     }
 }
