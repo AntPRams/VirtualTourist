@@ -14,14 +14,12 @@ class FlickrClient {
     class func taskForGETRequest<ResponseType: Decodable> (url: URL, response: ResponseType.Type, completionHandler: @escaping (ResponseType?, Error?) -> Void) {
         
         let task = URLSession.shared.dataTask(with: url) { (data, response, error) in
-            print("url: \(url)")
             guard let data = data else {
                
                 completionHandler(nil, error)
                 return
             }
             
-             print("data: \(data)")
             let decoder = JSONDecoder()
             
             do {
@@ -41,8 +39,11 @@ class FlickrClient {
     class func getImagesOfLocation(latitude: Double, longitude: Double, pages: Int? = nil, completionHandler: @escaping (PhotosResponse?, Error?) -> Void) {
         
         var page: Int {
-            guard let pages = pages else {return 1}
-            return Int.random(in: 1...pages)
+            if let pages = pages {
+                let page = min(pages, 4000/EndPoints.numberOfResultsPerPage)
+                return Int.random(in: 1...page + 1)
+            }
+            return 1
         }
         
         taskForGETRequest(url: EndPoints.getImagesForLocation(String(latitude),

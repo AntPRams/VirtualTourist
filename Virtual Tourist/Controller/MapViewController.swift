@@ -11,7 +11,7 @@ import UIKit
 import CoreData
 import MapKit
 
-class MapViewController: MainViewController, NSFetchedResultsControllerDelegate {
+class MapViewController: UIViewController, NSFetchedResultsControllerDelegate {
     
     //MARK: Properties
     
@@ -35,7 +35,6 @@ class MapViewController: MainViewController, NSFetchedResultsControllerDelegate 
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
         fetchPinsAndPopulateMapWithAnnotations()
     }
     
@@ -91,8 +90,7 @@ class MapViewController: MainViewController, NSFetchedResultsControllerDelegate 
                          longitude: annotation.coordinate.longitude
             )
             mapView.addAnnotation(annotation)
-        case .changed:
-            break
+            annotations.append(annotation)
         default:
             break
         }
@@ -115,6 +113,7 @@ class MapViewController: MainViewController, NSFetchedResultsControllerDelegate 
         do {
             try fetchedResultsController.performFetch()
             guard let fetchedPins = fetchedResultsController.fetchedObjects else {return}
+            
             for pin in fetchedPins {
                 let annotation = MKPointAnnotation()
                 annotation.coordinate.latitude =  pin.latitude

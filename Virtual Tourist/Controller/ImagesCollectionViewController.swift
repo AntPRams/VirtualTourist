@@ -10,7 +10,7 @@ import UIKit
 import MapKit
 import CoreData
 
-class ImagesCollectionViewController: MainViewController {
+class ImagesCollectionViewController: UIViewController {
     
     //MARK: Properties
     

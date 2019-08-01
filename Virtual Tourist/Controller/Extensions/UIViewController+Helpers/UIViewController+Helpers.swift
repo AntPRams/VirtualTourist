@@ -9,9 +9,9 @@
 import CoreData
 import UIKit
 
-//Helper class with features that needs to be use in both view controllers
+//Helper extension with features that needs to be use in both view controllers
 
-class MainViewController: UIViewController {
+extension UIViewController {
     
     //Core data save and delete
     

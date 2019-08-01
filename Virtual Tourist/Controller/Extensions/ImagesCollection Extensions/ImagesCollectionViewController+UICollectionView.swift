@@ -27,9 +27,9 @@ extension ImagesCollectionViewController: UICollectionViewDataSource, UICollecti
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CollectionViewCell.reusableIdentifier, for: indexPath) as! CollectionViewCell
         
         cell.cellImageView.image = nil
+        cell.activityIndicator.hidesWhenStopped = true
         
         if cell.cellImageView.image == nil {
-            cell.activityIndicator.isHidden = false
             cell.activityIndicator.startAnimating()
             cell.backgroundColor = .gray
         }
@@ -40,7 +40,6 @@ extension ImagesCollectionViewController: UICollectionViewDataSource, UICollecti
                 cell.cellImageView.image = UIImage(data: data)
                 cell.cellImageView.contentMode = .scaleAspectFill
                 cell.activityIndicator.stopAnimating()
-                cell.activityIndicator.isHidden = true
                 downloadNewCollectionButton.isEnabled = true
             }
         }
