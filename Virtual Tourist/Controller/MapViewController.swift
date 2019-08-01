@@ -7,9 +7,9 @@
 //
 
 import UIKit
-import MapKit
-import CoreData
 
+import CoreData
+import MapKit
 
 class MapViewController: MainViewController, NSFetchedResultsControllerDelegate {
     
@@ -46,6 +46,23 @@ class MapViewController: MainViewController, NSFetchedResultsControllerDelegate 
     
     //MARK: Methods
     
+    func loadPinFromDataBase(_ longitude: CLLocationDegrees, _ latitude: CLLocationDegrees) -> Pin? {
+        
+        let fetchRequest: NSFetchRequest<Pin> = Pin.fetchRequest()
+        fetchRequest.predicate = NSPredicate(
+            format:"longitude == %@ AND latitude == %@",
+            String(longitude),
+            String(latitude)
+        )
+        do {
+            pin = try dataController.viewContext.fetch(fetchRequest).first
+            guard pin != nil else {return nil}
+        } catch {
+            showAlert(message: error.localizedDescription)
+        }
+        return pin
+    }
+    
     fileprivate func addGestureRecognizer() {
         
         let longPressGestureRecognizer = UILongPressGestureRecognizer(
@@ -75,7 +92,7 @@ class MapViewController: MainViewController, NSFetchedResultsControllerDelegate 
         case .changed:
             break
         default:
-            showAlert(message: "This feature is not available in this app")
+            break
         }
     }
    
@@ -103,7 +120,7 @@ class MapViewController: MainViewController, NSFetchedResultsControllerDelegate 
                 mapView.addAnnotation(annotation)
             }
         } catch {
-            fatalError()
+            showAlert(message: error.localizedDescription)
         }
     }
     
@@ -118,57 +135,5 @@ class MapViewController: MainViewController, NSFetchedResultsControllerDelegate 
     }
 }
 
-extension MapViewController: MKMapViewDelegate {
-    
-    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        let reuseId = "pin"
-        var pinView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseId) as? MKPinAnnotationView
-        
-        if pinView == nil {
-            pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
-            pinView?.canShowCallout = true
-            pinView?.tintColor = .red
-        } else {
-            pinView?.annotation = annotation
-        }
-        return pinView
-    }
-    
-    fileprivate func loadPinFromDataBase(_ longitude: CLLocationDegrees, _ latitude: CLLocationDegrees) -> Pin? {
-        
-        let fetchRequest: NSFetchRequest<Pin> = Pin.fetchRequest()
-        fetchRequest.predicate = NSPredicate(
-            format:"longitude == %@ AND latitude == %@",
-            String(longitude),
-            String(latitude)
-        )
-        do {
-            pin = try dataController.viewContext.fetch(fetchRequest).first
-            guard pin != nil else {return nil}
-        } catch {
-            showAlert(message: error.localizedDescription)
-        }
-        
-        return pin
-    }
-    
-    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-        
-        guard let annotation = view.annotation,
-            let pin = loadPinFromDataBase(
-                annotation.coordinate.longitude,
-                annotation.coordinate.latitude
-            )
-            else {return}
-        
-        if isEditing {
-            mapView.removeAnnotation(annotation)
-            delete(dataController.viewContext, object: pin)
-            return
-        }
-        
-        mapView.deselectAnnotation(annotation, animated: true)
-        performSegue(withIdentifier: "mapToCollection", sender: pin)
-    }
-}
+
 

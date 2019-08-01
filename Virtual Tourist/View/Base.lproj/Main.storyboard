@@ -86,8 +86,8 @@
                                             <constraint firstItem="maN-Nh-AXk" firstAttribute="leading" secondItem="csk-IS-amO" secondAttribute="leading" id="iQx-D6-ejd"/>
                                         </constraints>
                                         <connections>
-                                            <outlet property="activityIndicator" destination="vWf-M1-hwY" id="lxz-GM-cUh"/>
-                                            <outlet property="cellImageView" destination="maN-Nh-AXk" id="ROT-CW-46s"/>
+                                            <outlet property="activityIndicator" destination="vWf-M1-hwY" id="jaM-Ox-GZs"/>
+                                            <outlet property="cellImageView" destination="maN-Nh-AXk" id="fvV-KY-jMa"/>
                                         </connections>
                                     </collectionViewCell>
                                 </cells>
@@ -96,8 +96,8 @@
                                     <outlet property="delegate" destination="g54-Ib-s7L" id="uvj-Ib-K2E"/>
                                 </connections>
                             </collectionView>
-                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2fE-A3-QIw">
-                                <rect key="frame" x="0.0" y="818" width="414" height="44"/>
+                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="2fE-A3-QIw">
+                                <rect key="frame" x="0.0" y="818" width="414" height="49"/>
                                 <items>
                                     <barButtonItem style="plain" systemItem="flexibleSpace" id="RQT-Bx-1za"/>
                                     <barButtonItem title="Download New Collection" id="LKm-Oc-i8n">
@@ -136,6 +136,7 @@
                     <connections>
                         <outlet property="collectionView" destination="MIg-my-PAj" id="8PL-uU-4uP"/>
                         <outlet property="downloadNewCollectionButton" destination="LKm-Oc-i8n" id="nXV-14-ZyL"/>
+                        <outlet property="flowLayout" destination="OmM-Nm-7Rn" id="jdk-33-WeN"/>
                         <outlet property="mapView" destination="cfp-o5-PVe" id="9CS-EW-LNE"/>
                     </connections>
                 </viewController>

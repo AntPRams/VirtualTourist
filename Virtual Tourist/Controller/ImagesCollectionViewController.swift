@@ -23,14 +23,19 @@ class ImagesCollectionViewController: MainViewController {
     var deleteIndexPath: [IndexPath]!
     var updateIndexPath: [IndexPath]!
     
-    var coordinate: CLLocationCoordinate2D!
-    
     //Outlets
     
+    @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var collectionView: UICollectionView!
     
     @IBOutlet weak var downloadNewCollectionButton: UIBarButtonItem!
+    
+    
+    @IBOutlet weak var cell: UICollectionViewCell!
+    @IBOutlet weak var imageView: UIImageView!
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
+    
     
     //MARK: View life cycle
     
@@ -40,12 +45,12 @@ class ImagesCollectionViewController: MainViewController {
         downloadNewCollectionButton.isEnabled = false
         fetchOrDownloadImagesForSelected(pin)
         setMapInLocation(pin)
+        setFlowLayout(interItemInLine: 8, cellsPerRow: 3)
     }
     
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
         
-        downloadNewCollectionButton.isEnabled = false
         fetchedResultsController = nil
     }
     
@@ -54,7 +59,6 @@ class ImagesCollectionViewController: MainViewController {
     @IBAction func downloadNewCollectionOnButtonTapped(_ sender: Any) {
         
         guard let images = pin.images else {return}
-        downloadNewCollectionButton.isEnabled = false
         for image in images {
             delete(dataController.viewContext, object: image as! NSManagedObject)
         }
@@ -63,6 +67,28 @@ class ImagesCollectionViewController: MainViewController {
     }
     
     //MARK: Methods
+    
+    private func setFlowLayout(interItemInLine spacing: CGFloat, cellsPerRow: CGFloat) {
+        
+        let collectionViewFrameWidth = collectionView.frame.width
+        let dimension = (collectionViewFrameWidth - ((cellsPerRow + 1) * spacing)) / cellsPerRow
+        
+        flowLayout.minimumInteritemSpacing = spacing
+        flowLayout.minimumLineSpacing =      spacing
+        
+        flowLayout.itemSize = CGSize(
+            width: dimension,
+            height: dimension
+        )
+        
+        flowLayout.sectionInset = UIEdgeInsets(
+            top: spacing,
+            left: spacing,
+            bottom: spacing,
+            right: spacing
+        )
+        
+    }
     
     fileprivate func fetchOrDownloadImagesForSelected(_ pin: Pin) {
         
@@ -112,6 +138,7 @@ class ImagesCollectionViewController: MainViewController {
     
     private func getImagesFromFlickrForSelectedPin (latitude: Double?, longitude: Double?) {
         
+        downloadNewCollectionButton.isEnabled = false
         guard let latitude = latitude,
             let longitude = longitude
             else {return}
@@ -150,145 +177,19 @@ class ImagesCollectionViewController: MainViewController {
                 }
             }
             
-            downloadNewCollectionButton.isEnabled = true
-            
             pin.images?.addingObjects(from: imagesToSave)
             save(dataController.viewContext)
             
             if response.count == 0 {
                 showAlert(message: "There are no images for this location")
-                downloadNewCollectionButton.isEnabled = false
             }
         } else {
             showAlert(message: error?.localizedDescription ?? "Error")
-            downloadNewCollectionButton.isEnabled = false
         }
     }
 }
 
-extension ImagesCollectionViewController: UICollectionViewDataSource, UICollectionViewDelegate {
-    
-    func numberOfSections(in collectionView: UICollectionView) -> Int {
-        
-        return fetchedResultsController.sections?.count ?? 0
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        
-        return fetchedResultsController.sections?[0].numberOfObjects ?? 0
-    }
-    
-    
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        
-        let image = fetchedResultsController.object(at: indexPath)
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CollectionViewCell.reusableIdentifier, for: indexPath) as! CollectionViewCell
-        
-        cell.cellImageView.image = nil
-        cell.activityIndicator.startAnimating()
-        cell.backgroundColor = .gray
-        
-        if image.data != nil {
-            if let data = image.data {
-                cell.backgroundColor = .clear
-                cell.cellImageView.image = UIImage(data: data)
-                cell.activityIndicator.stopAnimating()
-                cell.activityIndicator.isHidden = true
-            }
-        }
-        
-        return cell
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        downloadNewCollectionButton.isEnabled = true
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        
-        if downloadNewCollectionButton.isEnabled == true {
-            let imageToDelete = fetchedResultsController.object(at: indexPath)
-            delete(dataController.viewContext, object: imageToDelete)
-        } else {
-            return
-        }
-    }
-}
 
-extension ImagesCollectionViewController: NSFetchedResultsControllerDelegate {
-        
-        func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-            insertIndexPath = [IndexPath]()
-            deleteIndexPath = [IndexPath]()
-            updateIndexPath = [IndexPath]()
-        }
-        
-        func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
-            
-            switch (type) {
-            case .insert:
-                insertIndexPath.append(newIndexPath!)
-                break
-            case .update:
-                updateIndexPath.append(indexPath!)
-                break
-            case .delete:
-                deleteIndexPath.append(indexPath!)
-                break
-            case .move:
-                showAlert(message: "This feature was not implemented in this app.")
-                break
-            @unknown default:
-                showAlert(message: "Unknow feature not yet implemented")
-            }
-        }
-        
-        func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-            
-            collectionView.performBatchUpdates( {() -> Void in
-                for indexPath in self.insertIndexPath {
-                    self.collectionView.insertItems(at: [indexPath])
-                }
-                for indexPath in self.deleteIndexPath {
-                    self.collectionView.deleteItems(at: [indexPath])
-                }
-                for indexPath in self.updateIndexPath {
-                    self.collectionView.reloadItems(at: [indexPath])
-                }
-            }, completion: nil)
-        }
-}
 
-extension ImagesCollectionViewController: MKMapViewDelegate {
-    
-    func setMapInLocation(_ pin: Pin) {
-        
-        let annotation = MKPointAnnotation()
-        
-        annotation.coordinate.latitude = pin.latitude
-        annotation.coordinate.longitude = pin.longitude
-        
-        mapView.setCenter(CLLocationCoordinate2D(latitude: annotation.coordinate.latitude, longitude: annotation.coordinate.longitude), animated: false)
-        //mapView.isZoomEnabled = false
-        mapView.isUserInteractionEnabled = false
-        
-        mapView.addAnnotation(annotation)
-        
-    }
-    
-    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        let reuseId = "pin"
-        var pinView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseId) as? MKPinAnnotationView
-        
-        if pinView == nil {
-            pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
-            pinView?.canShowCallout = true
-            pinView?.tintColor = .red
-        } else {
-            pinView?.annotation = annotation
-        }
-        return pinView
-    }
-    
-}
+
 

@@ -19,9 +19,8 @@ class MainViewController: UIViewController {
         if context.hasChanges {
             do {
                 try context.save()
-                print("success on saving!!")
             } catch {
-                print("Error saving")
+                showAlert(message: error.localizedDescription)
             }
         }
     }
