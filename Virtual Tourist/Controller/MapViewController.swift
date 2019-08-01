@@ -17,7 +17,8 @@ class MapViewController: MainViewController, NSFetchedResultsControllerDelegate 
     
     var fetchedResultsController: NSFetchedResultsController<Pin>!
     var dataController:           DataController!
-    var pin:                      Pin?
+    var annotations =             [MKPointAnnotation]()
+    var pin: Pin?
     
     //Outlets
     
@@ -41,6 +42,7 @@ class MapViewController: MainViewController, NSFetchedResultsControllerDelegate 
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         
+        mapView.removeAnnotations(annotations)
         fetchedResultsController = nil
     }
     
@@ -118,6 +120,7 @@ class MapViewController: MainViewController, NSFetchedResultsControllerDelegate 
                 annotation.coordinate.latitude =  pin.latitude
                 annotation.coordinate.longitude = pin.longitude
                 mapView.addAnnotation(annotation)
+                annotations.append(annotation)
             }
         } catch {
             showAlert(message: error.localizedDescription)

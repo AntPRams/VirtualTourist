@@ -8,13 +8,16 @@
 
 import Foundation
 
+
+
 enum EndPoints {
-    
     //Construct URL to comunicate with Flickr API search Method
+    
+    static let api = "API_KEY_GOES_HERE"
     
     static let base =           "https://www.flickr.com/services/rest/"
     static let searchMethod =   "?method=flickr.photos.search"
-    static let apiKey =         "&api_key=eccb4ab3d58a3ccf0452fa2fd2422b8a"
+    static let apiKey =         "&api_key=\(api)"
     static let accuracy =       "&accuracy=9"
     static let contentType =    "&content_type=1"
     static let latitude =       "&lat="

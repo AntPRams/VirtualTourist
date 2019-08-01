@@ -41,12 +41,8 @@ extension ImagesCollectionViewController: UICollectionViewDataSource, UICollecti
                 cell.cellImageView.contentMode = .scaleAspectFill
                 cell.activityIndicator.stopAnimating()
                 cell.activityIndicator.isHidden = true
+                downloadNewCollectionButton.isEnabled = true
             }
-        }
-        if collectionView.visibleCells.isEmpty {
-            downloadNewCollectionButton.isEnabled = false
-        } else {
-            downloadNewCollectionButton.isEnabled = true
         }
         return cell
     }
