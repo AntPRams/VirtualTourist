@@ -9,7 +9,11 @@
 import CoreData
 import UIKit
 
+//Helper class with features that needs to be use in both view controllers
+
 class MainViewController: UIViewController {
+    
+    //Core data save and delete
     
     func save(_ context: NSManagedObjectContext) {
         if context.hasChanges {
@@ -26,7 +30,17 @@ class MainViewController: UIViewController {
         
         context.delete(object)
         save(context)
+    }
+    
+    //Show alert
+    
+    func showAlert(message: String) {
         
+        let alert = UIAlertController(title: "Oops...", message: message, preferredStyle: .alert)
+        let okButton = UIAlertAction(title: "Ok", style: .cancel, handler: nil)
+        
+        alert.addAction(okButton)
+        present(alert, animated: true, completion: nil)
     }
     
 }

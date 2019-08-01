@@ -53,7 +53,7 @@ class FlickrClient {
             (response, error) in
                 
             if let response = response {
-                
+            
                 DispatchQueue.main.async {
                     completionHandler(response, nil)
                 }
@@ -73,6 +73,7 @@ class FlickrClient {
                     let imageData = try Data(contentsOf: url)
                     DispatchQueue.main.async {
                         image.data = imageData
+                        
                     }
                 } catch {
                     DispatchQueue.main.async {
@@ -83,7 +84,31 @@ class FlickrClient {
                 DispatchQueue.main.async {
                     guard let imageData = image.data else {return}
                     let image = UIImage(data: imageData)
+
                     completionHandler(image, nil)
+                }
+            }
+        }
+    }
+    
+    class func downloadImageDataTest(image: Image, completionHandler: @escaping(Data?, Error?) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            if image.data == nil {
+                guard let imageUrl = image.url, let url = URL(string: imageUrl) else {return}
+                do {
+                    let imageData = try Data(contentsOf: url)
+                    DispatchQueue.main.async {
+                        completionHandler(imageData, nil)
+                    }
+                } catch {
+                    DispatchQueue.main.async {
+                        completionHandler(nil, error)
+                    }
+                }
+            } else {
+                DispatchQueue.main.async {
+                    guard let imageData = image.data else {return}
+                    completionHandler(imageData, nil)
                 }
             }
         }

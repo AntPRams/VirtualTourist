@@ -29,7 +29,6 @@ class MapViewController: MainViewController, NSFetchedResultsControllerDelegate 
         super.viewDidLoad()
         
         navigationItem.rightBarButtonItem = editButtonItem
-        fetchPinsAndPopulateMapWithAnnotations()
         addGestureRecognizer()
     }
     
@@ -45,8 +44,15 @@ class MapViewController: MainViewController, NSFetchedResultsControllerDelegate 
         fetchedResultsController = nil
     }
     
+    //MARK: Methods
+    
     fileprivate func addGestureRecognizer() {
-        let longPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(addAnootationThroughGesture(_:)) )
+        
+        let longPressGestureRecognizer = UILongPressGestureRecognizer(
+            target: self,
+            action: #selector(addAnootationThroughGesture(_:))
+        )
+        
         longPressGestureRecognizer.minimumPressDuration = 1
         mapView.addGestureRecognizer(longPressGestureRecognizer)
     }
@@ -69,7 +75,7 @@ class MapViewController: MainViewController, NSFetchedResultsControllerDelegate 
         case .changed:
             break
         default:
-            print("")
+            showAlert(message: "This feature is not available in this app")
         }
     }
    
@@ -140,7 +146,7 @@ extension MapViewController: MKMapViewDelegate {
             pin = try dataController.viewContext.fetch(fetchRequest).first
             guard pin != nil else {return nil}
         } catch {
-            print("error")
+            showAlert(message: error.localizedDescription)
         }
         
         return pin

@@ -12,9 +12,10 @@ import CoreData
 
 class ImagesCollectionViewController: MainViewController {
     
+    //MARK: Properties
+    
     var dataController: DataController!
     var fetchedResultsController: NSFetchedResultsController<Image>!
-    
     var pin: Pin!
     var totalPages: Int?
     
@@ -22,25 +23,46 @@ class ImagesCollectionViewController: MainViewController {
     var deleteIndexPath: [IndexPath]!
     var updateIndexPath: [IndexPath]!
     
+    var coordinate: CLLocationCoordinate2D!
+    
+    //Outlets
+    
+    @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var collectionView: UICollectionView!
+    
+    @IBOutlet weak var downloadNewCollectionButton: UIBarButtonItem!
+    
+    //MARK: View life cycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        downloadNewCollectionButton.isEnabled = false
         fetchOrDownloadImagesForSelected(pin)
+        setMapInLocation(pin)
     }
-    
-//    override func viewWillAppear(_ animated: Bool) {
-//        super.viewWillAppear(animated)
-//
-//        fetchOrDownloadImagesForSelected(pin)
-//    }
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         
+        downloadNewCollectionButton.isEnabled = false
         fetchedResultsController = nil
     }
+    
+    //MARK: Actions
+    
+    @IBAction func downloadNewCollectionOnButtonTapped(_ sender: Any) {
+        
+        guard let images = pin.images else {return}
+        downloadNewCollectionButton.isEnabled = false
+        for image in images {
+            delete(dataController.viewContext, object: image as! NSManagedObject)
+        }
+        
+        getImagesFromFlickrForSelectedPin(latitude: pin.latitude, longitude: pin.longitude)
+    }
+    
+    //MARK: Methods
     
     fileprivate func fetchOrDownloadImagesForSelected(_ pin: Pin) {
         
@@ -49,6 +71,7 @@ class ImagesCollectionViewController: MainViewController {
         if pin.images?.count == 0 {
             getImagesFromFlickrForSelectedPin(latitude: pin.latitude, longitude: pin.longitude)
         }
+        
     }
     
     private func checkImagesForSelected(_ pin: Pin) {
@@ -83,7 +106,7 @@ class ImagesCollectionViewController: MainViewController {
         do {
             try fetchedResultsController.performFetch()
         } catch {
-            print("error getting images fetched results controller")
+            showAlert(message: error.localizedDescription)
         }
     }
     
@@ -117,17 +140,28 @@ class ImagesCollectionViewController: MainViewController {
                 image.url = url
                 image.pin = pin
                 imagesToSave.append(image)
+                FlickrClient.downloadImageDataTest(image: image) { (data, error) in
+                    if error == nil {
+                        image.data = data
+                        self.save(self.dataController.viewContext)
+                    } else {
+                        self.showAlert(message: error?.localizedDescription ?? "Error")
+                    }
+                }
             }
+            
+            downloadNewCollectionButton.isEnabled = true
             
             pin.images?.addingObjects(from: imagesToSave)
             save(dataController.viewContext)
             
             if response.count == 0 {
-                print("NO IMAGES")
+                showAlert(message: "There are no images for this location")
+                downloadNewCollectionButton.isEnabled = false
             }
-            
         } else {
-            print("error")
+            showAlert(message: error?.localizedDescription ?? "Error")
+            downloadNewCollectionButton.isEnabled = false
         }
     }
 }
@@ -147,39 +181,41 @@ extension ImagesCollectionViewController: UICollectionViewDataSource, UICollecti
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         
+        let image = fetchedResultsController.object(at: indexPath)
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CollectionViewCell.reusableIdentifier, for: indexPath) as! CollectionViewCell
-    
+        
         cell.cellImageView.image = nil
         cell.activityIndicator.startAnimating()
+        cell.backgroundColor = .gray
+        
+        if image.data != nil {
+            if let data = image.data {
+                cell.backgroundColor = .clear
+                cell.cellImageView.image = UIImage(data: data)
+                cell.activityIndicator.stopAnimating()
+                cell.activityIndicator.isHidden = true
+            }
+        }
         
         return cell
     }
     
-    func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        
-        let image = fetchedResultsController.object(at: indexPath)
-        let cell = cell as! CollectionViewCell
-        
-        FlickrClient.downloadImageData(image: image) { (image, error) in
-            if let image = image {
-                cell.activityIndicator.stopAnimating()
-                cell.activityIndicator.isHidden = true
-                cell.cellImageView.image = image
-                self.save(self.dataController.viewContext)
-            } else {
-                print(error?.localizedDescription)
-            }
-        }
+    func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        downloadNewCollectionButton.isEnabled = true
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
-        let imageToDelete = fetchedResultsController.object(at: indexPath)
-        delete(dataController.viewContext, object: imageToDelete)
+        if downloadNewCollectionButton.isEnabled == true {
+            let imageToDelete = fetchedResultsController.object(at: indexPath)
+            delete(dataController.viewContext, object: imageToDelete)
+        } else {
+            return
+        }
     }
 }
 
-    extension ImagesCollectionViewController: NSFetchedResultsControllerDelegate {
+extension ImagesCollectionViewController: NSFetchedResultsControllerDelegate {
         
         func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
             insertIndexPath = [IndexPath]()
@@ -200,10 +236,10 @@ extension ImagesCollectionViewController: UICollectionViewDataSource, UICollecti
                 deleteIndexPath.append(indexPath!)
                 break
             case .move:
-                print("This feature is not implemented in this app.")
+                showAlert(message: "This feature was not implemented in this app.")
                 break
             @unknown default:
-                print("Unknow feature not yet implemented")
+                showAlert(message: "Unknow feature not yet implemented")
             }
         }
         
@@ -221,5 +257,38 @@ extension ImagesCollectionViewController: UICollectionViewDataSource, UICollecti
                 }
             }, completion: nil)
         }
+}
+
+extension ImagesCollectionViewController: MKMapViewDelegate {
+    
+    func setMapInLocation(_ pin: Pin) {
+        
+        let annotation = MKPointAnnotation()
+        
+        annotation.coordinate.latitude = pin.latitude
+        annotation.coordinate.longitude = pin.longitude
+        
+        mapView.setCenter(CLLocationCoordinate2D(latitude: annotation.coordinate.latitude, longitude: annotation.coordinate.longitude), animated: false)
+        //mapView.isZoomEnabled = false
+        mapView.isUserInteractionEnabled = false
+        
+        mapView.addAnnotation(annotation)
+        
+    }
+    
+    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+        let reuseId = "pin"
+        var pinView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseId) as? MKPinAnnotationView
+        
+        if pinView == nil {
+            pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
+            pinView?.canShowCallout = true
+            pinView?.tintColor = .red
+        } else {
+            pinView?.annotation = annotation
+        }
+        return pinView
+    }
+    
 }
 

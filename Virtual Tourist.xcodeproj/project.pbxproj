@@ -19,7 +19,7 @@
 		91EB31DE22E6329B00C37DD7 /* EndPoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91EB31DD22E6329B00C37DD7 /* EndPoints.swift */; };
 		91EB31E122E69C4C00C37DD7 /* PhotosArrayResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91EB31E022E69C4C00C37DD7 /* PhotosArrayResponse.swift */; };
 		91FF208222E7D2B10049D6F2 /* CollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FF208122E7D2B10049D6F2 /* CollectionViewCell.swift */; };
-		91FF208422E7D9890049D6F2 /* PhotosCollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FF208322E7D9890049D6F2 /* PhotosCollectionViewController.swift */; };
+		91FF208422E7D9890049D6F2 /* ImagesCollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FF208322E7D9890049D6F2 /* ImagesCollectionViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,7 +37,7 @@
 		91EB31DD22E6329B00C37DD7 /* EndPoints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EndPoints.swift; sourceTree = "<group>"; };
 		91EB31E022E69C4C00C37DD7 /* PhotosArrayResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotosArrayResponse.swift; sourceTree = "<group>"; };
 		91FF208122E7D2B10049D6F2 /* CollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionViewCell.swift; sourceTree = "<group>"; };
-		91FF208322E7D9890049D6F2 /* PhotosCollectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotosCollectionViewController.swift; sourceTree = "<group>"; };
+		91FF208322E7D9890049D6F2 /* ImagesCollectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagesCollectionViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,6 +51,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		911CD30422F2DB5000AA4749 /* New Group */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = "New Group";
+			sourceTree = "<group>";
+		};
 		91EB31B122E51BAC00C37DD7 = {
 			isa = PBXGroup;
 			children = (
@@ -102,9 +109,10 @@
 			isa = PBXGroup;
 			children = (
 				91EB31BF22E51BAD00C37DD7 /* MapViewController.swift */,
-				91FF208322E7D9890049D6F2 /* PhotosCollectionViewController.swift */,
+				91FF208322E7D9890049D6F2 /* ImagesCollectionViewController.swift */,
 				91FF208122E7D2B10049D6F2 /* CollectionViewCell.swift */,
 				916CE1C722F1DD4800320F96 /* MainViewController.swift */,
+				911CD30422F2DB5000AA4749 /* New Group */,
 			);
 			path = Controller;
 			sourceTree = "<group>";
@@ -217,7 +225,7 @@
 			files = (
 				91EB31DB22E5372500C37DD7 /* DataController.swift in Sources */,
 				91FF208222E7D2B10049D6F2 /* CollectionViewCell.swift in Sources */,
-				91FF208422E7D9890049D6F2 /* PhotosCollectionViewController.swift in Sources */,
+				91FF208422E7D9890049D6F2 /* ImagesCollectionViewController.swift in Sources */,
 				91EB31D922E51DD700C37DD7 /* VirtualTourist.xcdatamodeld in Sources */,
 				91EB31DE22E6329B00C37DD7 /* EndPoints.swift in Sources */,
 				91EB31C022E51BAD00C37DD7 /* MapViewController.swift in Sources */,
