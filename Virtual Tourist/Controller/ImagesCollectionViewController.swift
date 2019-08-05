@@ -42,6 +42,8 @@ class ImagesCollectionViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        title = "Album"
+        
         downloadNewCollectionButton.isEnabled = false
         fetchOrDownloadImagesForSelected(pin)
         setMapInLocation(pin)

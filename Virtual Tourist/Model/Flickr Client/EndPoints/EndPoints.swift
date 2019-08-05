@@ -8,8 +8,6 @@
 
 import Foundation
 
-
-
 enum EndPoints {
     //Construct URL to comunicate with Flickr API search Method
     
